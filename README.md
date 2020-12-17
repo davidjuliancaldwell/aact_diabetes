@@ -31,6 +31,8 @@ here
 emmeans
 sjPlot
 coin
+nnet
+stargazer
 
 Install with install.packges('packageName')
 
