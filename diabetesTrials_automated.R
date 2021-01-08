@@ -22,8 +22,8 @@ library(nnet)
 
 savePlot = TRUE
 saveData = TRUE
-userAACT="djcald"
-passwordAACT="DD968radford"
+userAACT="USER_NAME"
+passwordAACT="PASSWORD"
 
 #########################################
 # create search parameters
@@ -336,8 +336,6 @@ joinedTableCount <- joinedTable %>% group_by(yearStart,control_status) %>%
   mutate(freq = n/sum(n))
 joinedTableCount <- rename(joinedTableCount,yearlyCount = n)
 
-
-
 # calculate statistics
 joinedTableTotals <- joinedTable %>% group_by(control_status) %>% tally()
 
@@ -362,33 +360,39 @@ joinedTableSummarizePubCount <- joinedTable %>% group_by(control_status,pubCount
 joinedTableMedianNumbers <- joinedTable %>% filter(enrollment>0) %>% group_by(control_status) %>% summarize(median=median(enrollment,na.rm=TRUE),iqr = IQR(enrollment,na.rm=TRUE))
 joinedTableUnivHosp <- joinedTable %>% filter((univHosp %in% c('University','Hospital')) & fundingComb == 'Other') %>% group_by(control_status,univHosp) %>% tally()
 
-joinedTableSummarizeCountryAlloc <- joinedTable %>% group_by(allocation,usaLoc) %>% tally()
+joinedTableAlloc <- joinedTable %>% filter(allocation=='Non-Randomized' | allocation=='Randomized')
+joinedTableActivePlaceboAlloc <- joinedTableAlloc%>% group_by(allocation,active_placebo) %>% tally()
 
-joinedTableSummarizeTypeAlloc <- joinedTable %>% group_by(allocation,study_type) %>% tally()
-joinedTableSummarizePhaseAlloc <- joinedTable %>% group_by(allocation,phase_condensed) %>% tally()
-joinedTableSummarizePhaseMoreAlloc <- joinedTable %>% group_by(allocation,phase) %>% tally()
-joinedTableSummarizeAgencyAlloc <- joinedTable %>% group_by(allocation,fundingComb) %>% tally()
-joinedTableSummarizeReportedAlloc <- joinedTable %>% group_by(allocation,were_results_reported) %>% tally()
-joinedTableSummarizeSiteAlloc<- joinedTable %>% group_by(allocation,multisite) %>% tally()
-joinedTableSummarizeStatusAlloc<- joinedTable %>% group_by(allocation,last_known_status) %>% tally()
-joinedTableSummarizeOverallStatusAlloc <- joinedTable %>% group_by(allocation,status_condensed) %>% tally()
-joinedTableSummarizePubCountAlloc <- joinedTable %>% group_by(allocation,pubCountBool) %>% tally()
-joinedTableMedianNumbersAlloc <- joinedTable %>% filter(enrollment>0) %>% group_by(allocation) %>% summarize(median=median(enrollment,na.rm=TRUE),iqr = IQR(enrollment,na.rm=TRUE))
-joinedTableUnivHospAlloc <- joinedTable %>% filter((univHosp %in% c('University','Hospital')) & fundingComb == 'Other') %>% group_by(allocation,univHosp) %>% tally()
+joinedTableSummarizeCountryAlloc <- joinedTableAlloc %>% group_by(allocation,usaLoc) %>% tally()
 
-joinedTableSummarizeCountryMask <- joinedTable %>% group_by(masking,usaLoc) %>% tally()
+joinedTableSummarizeTypeAlloc <- joinedTableAlloc %>% group_by(allocation,study_type) %>% tally()
+joinedTableSummarizePhaseAlloc <- joinedTableAlloc %>% group_by(allocation,phase_condensed) %>% tally()
+joinedTableSummarizePhaseMoreAlloc <- joinedTableAlloc %>% group_by(allocation,phase) %>% tally()
+joinedTableSummarizeAgencyAlloc <- joinedTableAlloc %>% group_by(allocation,fundingComb) %>% tally()
+joinedTableSummarizeReportedAlloc <- joinedTableAlloc %>% group_by(allocation,were_results_reported) %>% tally()
+joinedTableSummarizeSiteAlloc<- joinedTableAlloc %>% group_by(allocation,multisite) %>% tally()
+joinedTableSummarizeStatusAlloc<- joinedTableAlloc %>% group_by(allocation,last_known_status) %>% tally()
+joinedTableSummarizeOverallStatusAlloc <- joinedTableAlloc %>% group_by(allocation,status_condensed) %>% tally()
+joinedTableSummarizePubCountAlloc <- joinedTableAlloc %>% group_by(allocation,pubCountBool) %>% tally()
+joinedTableMedianNumbersAlloc <- joinedTableAlloc %>% filter(enrollment>0) %>% group_by(allocation) %>% summarize(median=median(enrollment,na.rm=TRUE),iqr = IQR(enrollment,na.rm=TRUE))
+joinedTableUnivHospAlloc <- joinedTableAlloc %>% filter((univHosp %in% c('University','Hospital')) & fundingComb == 'Other') %>% group_by(allocation,univHosp) %>% tally()
 
-joinedTableSummarizeTypeMask <- joinedTable %>% group_by(masking,study_type) %>% tally()
-joinedTableSummarizePhaseMask <- joinedTable %>% group_by(masking,phase_condensed) %>% tally()
-joinedTableSummarizePhaseMoreMask <- joinedTable %>% group_by(masking,phase) %>% tally()
-joinedTableSummarizeAgencyMask <- joinedTable %>% group_by(masking,fundingComb) %>% tally()
-joinedTableSummarizeReportedMask <- joinedTable %>% group_by(masking,were_results_reported) %>% tally()
-joinedTableSummarizeSiteMask<- joinedTable %>% group_by(masking,multisite) %>% tally()
-joinedTableSummarizeStatusMask<- joinedTable %>% group_by(masking,last_known_status) %>% tally()
-joinedTableSummarizeOverallStatusMask <- joinedTable %>% group_by(masking,status_condensed) %>% tally()
-joinedTableSummarizePubCountMask <- joinedTable %>% group_by(masking,pubCountBool) %>% tally()
-joinedTableMedianNumbersMask <- joinedTable %>% filter(enrollment>0) %>% group_by(masking) %>% summarize(median=median(enrollment,na.rm=TRUE),iqr = IQR(enrollment,na.rm=TRUE))
-joinedTableUnivHospMask <- joinedTable %>% filter((univHosp %in% c('University','Hospital')) & fundingComb == 'Other') %>% group_by(masking,univHosp) %>% tally()
+joinedTableMask <- joinedTable %>% filter(masking=='None (Open Label)' | masking =='Single' | masking =='Double' | masking =='Triple' |masking =='Quadruple') %>% mutate(masking = recode(masking,"None (Open Label)" = "Not Blinded","Single"="Partially Blinded","Double"="Partially Blinded","Triple"="Partially Blinded","Quadruple"="Fully Blinded"))
+joinedTableActivePlaceboMask <- joinedTableMask %>% group_by(masking,active_placebo) %>% tally()
+
+joinedTableSummarizeCountryMask <- joinedTableMask %>% group_by(masking,usaLoc) %>% tally()
+
+joinedTableSummarizeTypeMask <- joinedTableMask %>% group_by(masking,study_type) %>% tally()
+joinedTableSummarizePhaseMask <- joinedTableMask %>% group_by(masking,phase_condensed) %>% tally()
+joinedTableSummarizePhaseMoreMask <- joinedTableMask %>% group_by(masking,phase) %>% tally()
+joinedTableSummarizeAgencyMask <- joinedTableMask %>% group_by(masking,fundingComb) %>% tally()
+joinedTableSummarizeReportedMask <- joinedTableMask %>% group_by(masking,were_results_reported) %>% tally()
+joinedTableSummarizeSiteMask<- joinedTableMask %>% group_by(masking,multisite) %>% tally()
+joinedTableSummarizeStatusMask<- joinedTableMask %>% group_by(masking,last_known_status) %>% tally()
+joinedTableSummarizeOverallStatusMask <- joinedTableMask %>% group_by(masking,status_condensed) %>% tally()
+joinedTableSummarizePubCountMask <- joinedTableMask %>% group_by(masking,pubCountBool) %>% tally()
+joinedTableMedianNumbersMask <- joinedTableMask %>% filter(enrollment>0) %>% group_by(masking) %>% summarize(median=median(enrollment,na.rm=TRUE),iqr = IQR(enrollment,na.rm=TRUE))
+joinedTableUnivHospMask <- joinedTableMask %>% filter((univHosp %in% c('University','Hospital')) & fundingComb == 'Other') %>% group_by(masking,univHosp) %>% tally()
 
 
 #########################################
@@ -434,6 +438,8 @@ summary(stat_model_group)
 tab_model(stat_model_group)
 anova(stat_model_group,test="Chisq")
 confint(stat_model_group)
+
+tableControlStatusFreq <- joinedTableActivePlacebo %>% mutate(per = round(prop.table(n)*100,1))
 
 
 tableCountry = table(joinedTable$usaLoc,joinedTable$control_status,useNA = 'ifany')
@@ -528,6 +534,11 @@ summary(stat_modelAlloc)
 confint(stat_modelAlloc)
 tab_model(stat_modelAlloc)
 
+tableControlAlloc = table(joinedTableAlloc$active_placebo,joinedTableAlloc$allocation,useNA = 'ifany')
+tableControlFreqAlloc <- joinedTableActivePlaceboAlloc %>% group_by(allocation) %>% mutate(per = round(prop.table(n)*100,1))
+tableControlStatsAlloc <- sapply(1:nrow(tableControlAlloc),function(z) prop.test(tableControlAlloc[z,, drop = TRUE], n = colSums(tableControlAlloc)))
+chisq.test(tableControlAlloc)
+
 tableCountryAlloc = table(joinedTableAlloc$usaLoc,joinedTableAlloc$allocation,useNA = 'ifany')
 tableCountryFreqAlloc <- joinedTableSummarizeCountryAlloc %>% group_by(allocation) %>% mutate(per = round(prop.table(n)*100,1))
 tableCountryStatsAlloc <- sapply(1:nrow(tableCountryAlloc),function(z) prop.test(tableCountryAlloc[z,, drop = TRUE], n = colSums(tableCountryAlloc)))
@@ -574,7 +585,6 @@ tableYearlyCountStatsAlloc <- sapply(1:nrow(tableYearlyCount),function(z) prop.t
 chisq.test(tableYearlyCount)
 
 # by blinding
-joinedTableMask <- joinedTable %>% filter(masking=='None (Open Label)' | masking =='Single' | masking =='Double' | masking =='Triple' |masking =='Quadruple') %>% mutate(masking = recode(masking,"None (Open Label)" = "Not Blinded","Single"="Partially Blinded","Double"="Partially Blinded","Triple"="Partially Blinded","Quadruple"="Fully Blinded"))
 
 joinedTableCountMask <- joinedTableMask %>%  group_by(yearStart,masking) %>%
   summarize(n=n()) %>%
@@ -588,8 +598,9 @@ joinedTableCountCatMask <- joinedTableMask %>% mutate(yearStart = as.factor(year
 joinedTableCountCatMask <- rename(joinedTableCountCatMask,yearlyCount = n)
 
 joinedTableCatMask <- joinedTableMask %>% mutate(yearStart = as.factor(yearStart)) %>%
-  mutate(masking = recode(masking,"Not Blinded" = 0,"Partially Blinde"=1,"Fully Blinded"=2))
-
+  #mutate(masking = as.factor(recode(masking,"Not Blinded" = 0,"Partially Blinded"=1,"Fully Blinded"=2)))
+  mutate(masking = as.factor(masking))
+  
 #stat_model_catMask <- glm(masking~yearStart,data=joinedTableCatMask,family=binomial(link="logit"))
 
 #summary(stat_model_catMask)
@@ -597,8 +608,8 @@ joinedTableCatMask <- joinedTableMask %>% mutate(yearStart = as.factor(yearStart
 #emmeansModelMask <- emmeans(stat_model_catMask,'yearStart',type='response')
 #pairs(emmeansModelMask,reverse=TRUE)
 #confint(emmeansModelMask)
-
-stat_model_catMask <- multinom(masking~yearStart,data=joinedTableCatMask)
+joinedTableCatMask$masking2 = relevel(joinedTableCatMask$masking, ref = "Not Blinded")
+stat_model_catMask <- multinom(masking2~yearStart,data=joinedTableCatMask)
 summary(stat_model_catMask)
 stargazer(stat_model_catMask,type="html",out="stat_model_catMask.htm")
 confint(stat_model_catMask)
@@ -617,6 +628,11 @@ stat_modelMask <- glm(masking~yearStart,family=binomial(link="logit"),data=joine
 summary(stat_modelMask)
 confint(stat_modelMask)
 tab_model(stat_modelMask)
+
+tableControlMask = table(joinedTableMask$active_placebo,joinedTableMask$masking,useNA = 'ifany')
+tableControlFreqMask <- joinedTableActivePlaceboMask %>% group_by(masking) %>% mutate(per = round(prop.table(n)*100,1))
+tableControlStatsMask <- sapply(1:nrow(tableControlMask),function(z) prop.test(tableControlMask[z,, drop = TRUE], n = colSums(tableControlMask)))
+chisq.test(tableControlMask)
 
 tableCountryMask = table(joinedTableMask$usaLoc,joinedTableMask$masking,useNA = 'ifany')
 tableCountryFreqMask <- joinedTableSummarizeCountryMask %>% group_by(masking) %>% mutate(per = round(prop.table(n)*100,1))
@@ -668,19 +684,19 @@ chisq.test(tableYearlyCountMask)
 
 ########################
 if (saveData){
-  saveRDS(joinedTable, file = "diabetesRdata_12_17_2020.rds")
-  #write.csv(designTrialExamineExperimentalOnly,'experimentalOnly_12_17_2020.csv')
-  write.csv(joinedTable,'diabetesTableTotal_12_17_2020.csv')
-  #write.csv(joinedTableDiverseDiscontinued,'diabetesTableDiscDiverse_12_17_2020.csv')
-  #write.csv(joinedTableSummarizeInterv,'diabetesTableInterv_12_17_2020.csv')
-  #write.csv(joinedTableSummarizeType,'diabetesTableType_12_17_2020.csv')
-  #write.csv(joinedTableSummarizePhase,'diabetesTablePhase_12_17_2020.csv')
-  #write.csv(joinedTableSummarizeAgency,'diabetesTableAgency_12_17_2020.csv')
-  #write.csv(joinedTableSummarizeReported,'diabetesTableReported_12_17_2020.csv')
-  #write.csv(joinedTableSummarizeSite,'diabetesTableSite_12_17_2020.csv')
-  #write.csv(joinedTableSummarizeStatus,'diabetesTableStatus_12_17_2020.csv')
-  #write.csv(joinedTableSummarizeOverallStatus,'diabetesTableOverallStatus_12_17_2020.csv')
-  #write.csv(joinedTableSummarizePubCount,'diabetesTablePubCount_12_17_2020.csv')
+  saveRDS(joinedTable, file = "diabetesRdata_1_7_2021.rds")
+  #write.csv(designTrialExamineExperimentalOnly,'experimentalOnly_1_7_2021.csv')
+  write.csv(joinedTable,'diabetesTableTotal_1_7_2021.csv')
+  #write.csv(joinedTableDiverseDiscontinued,'diabetesTableDiscDiverse_1_7_2021.csv')
+  #write.csv(joinedTableSummarizeInterv,'diabetesTableInterv_1_7_2021.csv')
+  #write.csv(joinedTableSummarizeType,'diabetesTableType_1_7_2021.csv')
+  #write.csv(joinedTableSummarizePhase,'diabetesTablePhase_1_7_2021.csv')
+  #write.csv(joinedTableSummarizeAgency,'diabetesTableAgency_1_7_2021.csv')
+  #write.csv(joinedTableSummarizeReported,'diabetesTableReported_1_7_2021.csv')
+  #write.csv(joinedTableSummarizeSite,'diabetesTableSite_1_7_2021.csv')
+  #write.csv(joinedTableSummarizeStatus,'diabetesTableStatus_1_7_2021.csv')
+  #write.csv(joinedTableSummarizeOverallStatus,'diabetesTableOverallStatus_1_7_2021.csv')
+  #write.csv(joinedTableSummarizePubCount,'diabetesTablePubCount_1_7_2021.csv')
 }
 
 #########################################
@@ -695,7 +711,7 @@ pInd<-ggplot(joinedTableCount, aes(x=yearStart,y=yearlyCount, group=control_stat
   scale_color_jama()
 print(pInd)
 if (savePlot){
-  ggsave("trialsByYearMultiArm_12_17_2020.png", units="in", width=6, height=4, dpi=600)
+  ggsave("trialsByYearMultiArm_1_7_2021.png", units="in", width=6, height=4, dpi=600)
 }
 
 # make plots
@@ -708,7 +724,7 @@ pInd<-ggplot(joinedTableCountAlloc, aes(x=yearStart,y=yearlyCount, group=allocat
   scale_color_jama()
 print(pInd)
 if (savePlot){
-  ggsave("trialsByYearAlloc_12_17_2020.png", units="in", width=6, height=4, dpi=600)
+  ggsave("trialsByYearAlloc_1_7_2021.png", units="in", width=6, height=4, dpi=600)
 }
 
 # make plots
@@ -721,7 +737,7 @@ pInd<-ggplot(joinedTableCountMask, aes(x=yearStart,y=yearlyCount, group=masking,
   scale_color_jama()
 print(pInd)
 if (savePlot){
-  ggsave("trialsByYearMask_12_17_2020.png", units="in", width=6, height=4, dpi=600)
+  ggsave("trialsByYearMask_1_7_2021.png", units="in", width=6, height=4, dpi=600)
 }
 
 #pHist<-ggplot(joinedTable, aes(x=number_of_arms,color=control_status,fill=control_status)) +
@@ -731,5 +747,5 @@ if (savePlot){
 #  guides(color=FALSE)
 #print(pHist)
 #if (savePlot){
-#  ggsave("trialsByYearHist_12_17_2020.png", units="in", width=5, height=4, dpi=600)
+#  ggsave("trialsByYearHist_1_7_2021.png", units="in", width=5, height=4, dpi=600)
 #}
