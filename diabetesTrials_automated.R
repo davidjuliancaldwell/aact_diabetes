@@ -22,7 +22,7 @@ library(nnet)
 
 savePlot = TRUE
 saveData = TRUE
-userAACT="USER_NAME"
+userAACT="USERNAME"
 passwordAACT="PASSWORD"
 
 #########################################
@@ -218,7 +218,7 @@ facilities_tabulated <- facilities_tabulated %>% mutate(multisite = ifelse(facil
 
 study_ref_tbl = tbl(src=con,'study_references')
 study_ref <- study_ref_tbl %>% select(nct_id,pmid,reference_type,citation) %>% collect()
-study_ref_tabulated <- study_ref %>% group_by(nct_id) %>% tally()
+study_ref_tabulated <- study_ref %>% filter(reference_type == "results_reference") %>% group_by(nct_id) %>% tally()
 study_ref_tabulated <- rename(study_ref_tabulated,pubCount = n)
 
 # this is a join that includes all categories, but only ones that match the description 
@@ -684,19 +684,19 @@ chisq.test(tableYearlyCountMask)
 
 ########################
 if (saveData){
-  saveRDS(joinedTable, file = "diabetesRdata_1_7_2021.rds")
-  #write.csv(designTrialExamineExperimentalOnly,'experimentalOnly_1_7_2021.csv')
-  write.csv(joinedTable,'diabetesTableTotal_1_7_2021.csv')
-  #write.csv(joinedTableDiverseDiscontinued,'diabetesTableDiscDiverse_1_7_2021.csv')
-  #write.csv(joinedTableSummarizeInterv,'diabetesTableInterv_1_7_2021.csv')
-  #write.csv(joinedTableSummarizeType,'diabetesTableType_1_7_2021.csv')
-  #write.csv(joinedTableSummarizePhase,'diabetesTablePhase_1_7_2021.csv')
-  #write.csv(joinedTableSummarizeAgency,'diabetesTableAgency_1_7_2021.csv')
-  #write.csv(joinedTableSummarizeReported,'diabetesTableReported_1_7_2021.csv')
-  #write.csv(joinedTableSummarizeSite,'diabetesTableSite_1_7_2021.csv')
-  #write.csv(joinedTableSummarizeStatus,'diabetesTableStatus_1_7_2021.csv')
-  #write.csv(joinedTableSummarizeOverallStatus,'diabetesTableOverallStatus_1_7_2021.csv')
-  #write.csv(joinedTableSummarizePubCount,'diabetesTablePubCount_1_7_2021.csv')
+  saveRDS(joinedTable, file = "diabetesRdata_1_11_2021.rds")
+  #write.csv(designTrialExamineExperimentalOnly,'experimentalOnly_1_11_2021.csv')
+  write.csv(joinedTable,'diabetesTableTotal_1_11_2021.csv')
+  #write.csv(joinedTableDiverseDiscontinued,'diabetesTableDiscDiverse_1_11_2021.csv')
+  #write.csv(joinedTableSummarizeInterv,'diabetesTableInterv_1_11_2021.csv')
+  #write.csv(joinedTableSummarizeType,'diabetesTableType_1_11_2021.csv')
+  #write.csv(joinedTableSummarizePhase,'diabetesTablePhase_1_11_2021.csv')
+  #write.csv(joinedTableSummarizeAgency,'diabetesTableAgency_1_11_2021.csv')
+  #write.csv(joinedTableSummarizeReported,'diabetesTableReported_1_11_2021.csv')
+  #write.csv(joinedTableSummarizeSite,'diabetesTableSite_1_11_2021.csv')
+  #write.csv(joinedTableSummarizeStatus,'diabetesTableStatus_1_11_2021.csv')
+  #write.csv(joinedTableSummarizeOverallStatus,'diabetesTableOverallStatus_1_11_2021.csv')
+  #write.csv(joinedTableSummarizePubCount,'diabetesTablePubCount_1_11_2021.csv')
 }
 
 #########################################
@@ -711,7 +711,7 @@ pInd<-ggplot(joinedTableCount, aes(x=yearStart,y=yearlyCount, group=control_stat
   scale_color_jama()
 print(pInd)
 if (savePlot){
-  ggsave("trialsByYearMultiArm_1_7_2021.png", units="in", width=6, height=4, dpi=600)
+  ggsave("trialsByYearMultiArm_1_11_2021.png", units="in", width=6, height=4, dpi=600)
 }
 
 # make plots
@@ -724,7 +724,7 @@ pInd<-ggplot(joinedTableCountAlloc, aes(x=yearStart,y=yearlyCount, group=allocat
   scale_color_jama()
 print(pInd)
 if (savePlot){
-  ggsave("trialsByYearAlloc_1_7_2021.png", units="in", width=6, height=4, dpi=600)
+  ggsave("trialsByYearAlloc_1_11_2021.png", units="in", width=6, height=4, dpi=600)
 }
 
 # make plots
@@ -737,7 +737,7 @@ pInd<-ggplot(joinedTableCountMask, aes(x=yearStart,y=yearlyCount, group=masking,
   scale_color_jama()
 print(pInd)
 if (savePlot){
-  ggsave("trialsByYearMask_1_7_2021.png", units="in", width=6, height=4, dpi=600)
+  ggsave("trialsByYearMask_1_11_2021.png", units="in", width=6, height=4, dpi=600)
 }
 
 #pHist<-ggplot(joinedTable, aes(x=number_of_arms,color=control_status,fill=control_status)) +
@@ -747,5 +747,5 @@ if (savePlot){
 #  guides(color=FALSE)
 #print(pHist)
 #if (savePlot){
-#  ggsave("trialsByYearHist_1_7_2021.png", units="in", width=5, height=4, dpi=600)
+#  ggsave("trialsByYearHist_1_11_2021.png", units="in", width=5, height=4, dpi=600)
 #}
