@@ -17,13 +17,14 @@ library(coin)
 library(emmeans)
 library(stargazer)
 library(nnet)
+library(easyPubMed)
 #########################################
 # boolean values for saving, username and password for accessing AACT database
 
 savePlot = TRUE
 saveData = TRUE
-userAACT="USERNAME"
-passwordAACT="PASSWORD"
+userAACT="djcald"
+passwordAACT="DD968radford"
 
 #########################################
 # create search parameters
@@ -305,8 +306,28 @@ joinedTable <- joinedTable %>% mutate(status_condensed = case_when(((overall_sta
                                                                   overall_status == 'Completed' ~ 'Completed',
                                                                   TRUE ~ 'Unknown'))
 
+#do more pubs analysis with easyPubMed package
 
 
+NCT_Identifier_list <- joinedTable[["nct_id"]] 
+NCT_Identifier_list<-as.list(NCT_Identifier_list)
+
+numElements <- nrow(joinedTable)
+NCT_df <- data.frame(Num_pubmed_pubs=integer(numElements),
+                     nct_id=as.character(numElements),
+                     stringsAsFactors = FALSE)
+
+
+for(i in 1:numElements){
+  temp_vec <-get_pubmed_ids(NCT_Identifier_list[i], api_key = NULL)
+  NCT_df[i,]$nct_id  = temp_vec$OriginalQuery
+  NCT_df[i,]$Num_pubmed_pubs = temp_vec$Count
+}
+
+joinedTable <- join_all(list(joinedTable,NCT_df),by='nct_id',type="full")
+
+
+joinedTable <- joinedTable %>% mutate(pubEitherWay = ((Num_pubmed_pubs > 0) | pubCountBool == TRUE))
 # create column for phase
 
 # done processing, now do checks, totals, and calculations
@@ -356,7 +377,7 @@ joinedTableSummarizeReported <- joinedTable %>% group_by(control_status,were_res
 joinedTableSummarizeSite<- joinedTable %>% group_by(control_status,multisite) %>% tally()
 joinedTableSummarizeStatus<- joinedTable %>% group_by(control_status,last_known_status) %>% tally()
 joinedTableSummarizeOverallStatus <- joinedTable %>% group_by(control_status,status_condensed) %>% tally()
-joinedTableSummarizePubCount <- joinedTable %>% group_by(control_status,pubCountBool) %>% tally()
+joinedTableSummarizePubCount <- joinedTable %>% group_by(control_status,pubEitherWay) %>% tally()
 joinedTableMedianNumbers <- joinedTable %>% filter(enrollment>0) %>% group_by(control_status) %>% summarize(median=median(enrollment,na.rm=TRUE),iqr = IQR(enrollment,na.rm=TRUE))
 joinedTableUnivHosp <- joinedTable %>% filter((univHosp %in% c('University','Hospital')) & fundingComb == 'Other') %>% group_by(control_status,univHosp) %>% tally()
 
@@ -373,7 +394,7 @@ joinedTableSummarizeReportedAlloc <- joinedTableAlloc %>% group_by(allocation,we
 joinedTableSummarizeSiteAlloc<- joinedTableAlloc %>% group_by(allocation,multisite) %>% tally()
 joinedTableSummarizeStatusAlloc<- joinedTableAlloc %>% group_by(allocation,last_known_status) %>% tally()
 joinedTableSummarizeOverallStatusAlloc <- joinedTableAlloc %>% group_by(allocation,status_condensed) %>% tally()
-joinedTableSummarizePubCountAlloc <- joinedTableAlloc %>% group_by(allocation,pubCountBool) %>% tally()
+joinedTableSummarizePubCountAlloc <- joinedTableAlloc %>% group_by(allocation,pubEitherWay) %>% tally()
 joinedTableMedianNumbersAlloc <- joinedTableAlloc %>% filter(enrollment>0) %>% group_by(allocation) %>% summarize(median=median(enrollment,na.rm=TRUE),iqr = IQR(enrollment,na.rm=TRUE))
 joinedTableUnivHospAlloc <- joinedTableAlloc %>% filter((univHosp %in% c('University','Hospital')) & fundingComb == 'Other') %>% group_by(allocation,univHosp) %>% tally()
 
@@ -390,7 +411,7 @@ joinedTableSummarizeReportedMask <- joinedTableMask %>% group_by(masking,were_re
 joinedTableSummarizeSiteMask<- joinedTableMask %>% group_by(masking,multisite) %>% tally()
 joinedTableSummarizeStatusMask<- joinedTableMask %>% group_by(masking,last_known_status) %>% tally()
 joinedTableSummarizeOverallStatusMask <- joinedTableMask %>% group_by(masking,status_condensed) %>% tally()
-joinedTableSummarizePubCountMask <- joinedTableMask %>% group_by(masking,pubCountBool) %>% tally()
+joinedTableSummarizePubCountMask <- joinedTableMask %>% group_by(masking,pubEitherWay) %>% tally()
 joinedTableMedianNumbersMask <- joinedTableMask %>% filter(enrollment>0) %>% group_by(masking) %>% summarize(median=median(enrollment,na.rm=TRUE),iqr = IQR(enrollment,na.rm=TRUE))
 joinedTableUnivHospMask <- joinedTableMask %>% filter((univHosp %in% c('University','Hospital')) & fundingComb == 'Other') %>% group_by(masking,univHosp) %>% tally()
 
@@ -475,7 +496,7 @@ tablePhaseStats <- sapply(1:nrow(tablePhase),function(z) prop.test(tablePhase[z,
 chisq.test(tablePhase)
 
 
-tablePub = table(joinedTable$pubCountBool,joinedTable$control_status,useNA = 'ifany')
+tablePub = table(joinedTable$pubEitherWay,joinedTable$control_status,useNA = 'ifany')
 tablePubFreq <- joinedTableSummarizePubCount %>% group_by(control_status) %>% mutate(per = round(prop.table(n)*100,1))
 tablePubStats <- sapply(1:nrow(tablePub),function(z) prop.test(tablePub[z,, drop = TRUE], n = colSums(tablePub)))
 chisq.test(tablePub)
@@ -568,7 +589,7 @@ tablePhaseFreqAlloc <- joinedTableSummarizePhaseAlloc %>% group_by(allocation) %
 tablePhaseStatsAlloc <- sapply(1:nrow(tablePhaseAlloc),function(z) prop.test(tablePhaseAlloc[z,, drop = TRUE], n = colSums(tablePhaseAlloc)))
 chisq.test(tablePhaseAlloc)
 
-tablePubAlloc = table(joinedTableAlloc$pubCountBool,joinedTableAlloc$allocation,useNA = 'ifany')
+tablePubAlloc = table(joinedTableAlloc$pubEitherWay,joinedTableAlloc$allocation,useNA = 'ifany')
 tablePubFreqAlloc <- joinedTableSummarizePubCountAlloc %>% group_by(allocation) %>% mutate(per = round(prop.table(n)*100,1))
 tablePubStatsAlloc <- sapply(1:nrow(tablePub),function(z) prop.test(tablePub[z,, drop = TRUE], n = colSums(tablePub)))
 chisq.test(tablePubAlloc)
@@ -665,7 +686,7 @@ tablePhaseStatsMask <- sapply(1:nrow(tablePhaseMask),function(z) prop.test(table
 chisq.test(tablePhaseMask)
 
 
-tablePubMask = table(joinedTableMask$pubCountBool,joinedTableMask$masking,useNA = 'ifany')
+tablePubMask = table(joinedTableMask$pubEitherWay,joinedTableMask$masking,useNA = 'ifany')
 tablePubFreqMask <- joinedTableSummarizePubCountMask %>% group_by(masking) %>% mutate(per = round(prop.table(n)*100,1))
 tablePubStatsMask <- sapply(1:nrow(tablePubMask),function(z) prop.test(tablePubMask[z,, drop = TRUE], n = colSums(tablePubMask)))
 chisq.test(tablePubMask)

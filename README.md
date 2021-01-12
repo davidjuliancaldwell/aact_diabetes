@@ -28,11 +28,12 @@ ggsci
 gridExtra  
 cowplot  
 here  
-emmeans
-sjPlot
-coin
-nnet
-stargazer
+emmeans  
+sjPlot  
+coin  
+nnet  
+stargazer  
+easyPubMed  
 
 Install with install.packges('packageName')
 
